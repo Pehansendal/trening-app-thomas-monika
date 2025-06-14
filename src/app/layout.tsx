@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 const inter = Inter({ subsets: ['latin'] }); // Initialize Inter font
 
 export const metadata: Metadata = {
-  title: "Thomas & Monika's Treningsprogram", // Updated title - Fikset apostrof - v2
+  title: "Thomas & Monika's Treningsprogram", // Updated title - Fikset apostrof - v3
   description: "Enkel treningsapp for Thomas og Monika", // Updated description
 };
 
