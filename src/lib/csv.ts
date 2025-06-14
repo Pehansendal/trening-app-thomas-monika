@@ -11,7 +11,18 @@ export async function getTrainingProgram() {
     skip_empty_lines: true,
   });
 
-  return records.map((record: any) => ({
+  interface CsvRecord {
+    Dato: string;
+    Ukedag: string;
+    Ukenummer: string;
+    Fokus: string;
+    Økt_Beskrivelse: string;
+    Thomas_Pace_Mål: string;
+    Monika_Pace_Mål: string;
+    Kommentar: string;
+  }
+
+  return records.map((record: CsvRecord) => ({
     dato: record.Dato,
     ukedag: record.Ukedag,
     ukenr: parseInt(record.Ukenummer),
