@@ -38,7 +38,7 @@ export default async function Home() {
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1 className="text-5xl font-extrabold text-white text-center drop-shadow-lg">
-            Thomas & Monika's Treningsprogram
+            Thomas & Monika's Treningsprogram {/* Fikset apostrof */}
           </h1>
         </div>
       </div>
