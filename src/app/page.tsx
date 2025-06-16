@@ -123,14 +123,14 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-0 sm:p-8 bg-gray-50">
       <div className="relative w-full h-64 mb-8">
         <Image
-          src="/image.png" // Using image.png as a generic header image
+          src="/toppbanneren.png" // Byttet til nytt bannerbilde
           alt="Treningsprogram Header"
           layout="fill"
           objectFit="cover"
-          className="brightness-75"
+          className="brightness-75" // Beholder brightness justering, kan justeres ved behov
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-5xl font-extrabold text-white text-center drop-shadow-lg">
+          <h1 className="text-4xl font-extrabold text-gray-900 text-center"> {/* Endret størrelse og farge */}
             Thomas & Monika's Treningsprogram {/* Fikset apostrof - v3 */}
           </h1>
         </div>
