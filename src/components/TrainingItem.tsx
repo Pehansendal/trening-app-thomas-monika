@@ -57,7 +57,18 @@ export default function TrainingItem({
       return; // Do not proceed
     }
 
-    const updateData: { [key: string]: any } = {};
+    interface UpdateDataType {
+      thomas_fullfort?: boolean;
+      monika_fullfort?: boolean;
+      thomas_fullfort_tidspunkt?: string | null;
+      monika_fullfort_tidspunkt?: string | null;
+      thomas_rpe?: number | null;
+      monika_rpe?: number | null;
+      thomas_actual_pace?: string | null;
+      monika_actual_pace?: string | null;
+    }
+
+    const updateData: UpdateDataType = {};
     const date = training.dato;
 
     if (person === 'thomas') {

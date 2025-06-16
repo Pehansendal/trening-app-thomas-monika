@@ -1,6 +1,6 @@
 'use client'; // Add 'use client' directive
 
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import React, { useState, useEffect, useCallback } from 'react'; // Import useState, useEffect, and useCallback
 import { TrainingDay } from '@/lib/csv'; // Keep TrainingDay type
 import { supabase } from '@/lib/supabase';
 import TrainingItem from '@/components/TrainingItem';
@@ -13,7 +13,7 @@ export default function Home() {
   const [loggedInUser, setLoggedInUser] = useState<'thomas' | 'monika' | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     // Fetch training program from API route
     const programResponse = await fetch('/api/training-program');
     if (programResponse.ok) {
@@ -43,7 +43,7 @@ export default function Home() {
       });
     });
     setCompletionMap(map);
-  };
+  }, []); // Empty dependency array as fetchData itself doesn't depend on external component state that changes
 
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function Home() {
     if (loggedInUser) {
       fetchData();
     }
-  }, [loggedInUser]);
+  }, [loggedInUser, fetchData]); // Add fetchData to dependency array
 
   const handleUpdateStatus = async () => {
     // This function will be called by TrainingItem after a successful Supabase update
