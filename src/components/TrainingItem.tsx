@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'; // Fjernet ubrukt useEffect
 import { createPortal } from 'react-dom'; // Import createPortal
 import { TrainingDay } from '@/lib/csv';
 import { supabase } from '@/lib/supabase';
