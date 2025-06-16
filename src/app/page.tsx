@@ -15,6 +15,10 @@ interface TrainingCompletionStatus {
   monika_rpe?: number | null;
   thomas_actual_pace?: string | null;
   monika_actual_pace?: string | null;
+  thomas_kommentar?: string | null;
+  monika_kommentar?: string | null;
+  trener_thomas_kommentar?: string | null;
+  trener_monika_kommentar?: string | null;
 }
 
 export default function Home() {
@@ -35,7 +39,7 @@ export default function Home() {
 
     const { data: completionStatusData, error } = await supabase
       .from('treningsprogram')
-      .select('dato, thomas_fullfort, monika_fullfort, thomas_rpe, monika_rpe, thomas_actual_pace, monika_actual_pace');
+      .select('dato, thomas_fullfort, monika_fullfort, thomas_rpe, monika_rpe, thomas_actual_pace, monika_actual_pace, thomas_kommentar, monika_kommentar, trener_thomas_kommentar, trener_monika_kommentar');
 
     if (error) {
       console.error('Error fetching completion status:', error);
@@ -50,6 +54,10 @@ export default function Home() {
         monika_rpe: status.monika_rpe,
         thomas_actual_pace: status.thomas_actual_pace,
         monika_actual_pace: status.monika_actual_pace,
+        thomas_kommentar: status.thomas_kommentar,
+        monika_kommentar: status.monika_kommentar,
+        trener_thomas_kommentar: status.trener_thomas_kommentar,
+        trener_monika_kommentar: status.trener_monika_kommentar,
       });
     });
     setCompletionMap(map);
@@ -68,26 +76,6 @@ export default function Home() {
   }, [loggedInUser, fetchData]); // fetchData depends on loggedInUser
 
   // Separate useEffect for playing sound when loggedInUser is set
-  useEffect(() => {
-    if (loggedInUser) {
-      const songs = [
-        '/sanger/sang_1.mp3',
-        '/sanger/sang_2.mp3',
-        '/sanger/sang_3.mp3',
-        '/sanger/sang_4.mp3',
-        '/sanger/sang_5.mp3',
-        '/sanger/sang_6.mp3',
-        '/sanger/sang_7.mp3',
-        '/sanger/sang_8.mp3',
-      ];
-      const randomSong = songs[Math.floor(Math.random() * songs.length)];
-      const audio = new Audio(randomSong);
-      console.log(`Attempting to play song: ${randomSong} for user: ${loggedInUser}`);
-      audio.play().catch(error => {
-        console.warn(`Autoplay was prevented for ${randomSong}:`, error);
-      });
-    }
-  }, [loggedInUser]); // Play sound when loggedInUser changes (and is not null)
 
   const handleUpdateStatus = async () => {
     // This function will be called by TrainingItem after a successful Supabase update
@@ -143,22 +131,9 @@ export default function Home() {
         Logg ut ({loggedInUser})
       </button>
 
-      <div className="flex flex-col lg:flex-row w-full max-w-7xl px-4 sm:px-0 gap-8">
-        {/* Left Image - Sticky */}
-        <div className="hidden lg:flex flex-col items-center w-full lg:w-1/5 sticky top-8 self-start">
-          <Image
-            src="/monikasint.jpg"
-            alt="Monika"
-            width={250}
-            height={250}
-            objectFit="contain"
-            className="rounded-lg shadow-md mb-8"
-          />
-          {/* You can add more images or content here */}
-        </div>
-
+      <div className="flex flex-col w-full max-w-4xl px-4 sm:px-0 gap-8">
         {/* Main Content */}
-        <div className="w-full lg:w-3/5">
+        <div className="w-full">
           {trainingProgram.map((training: TrainingDay) => {
             const status = completionMap.get(training.dato) || {
               thomas_fullfort: false,
@@ -167,6 +142,10 @@ export default function Home() {
               monika_rpe: null,
               thomas_actual_pace: null,
               monika_actual_pace: null,
+              thomas_kommentar: null,
+              monika_kommentar: null,
+              trener_thomas_kommentar: null,
+              trener_monika_kommentar: null,
             };
             return (
               <TrainingItem
@@ -178,19 +157,6 @@ export default function Home() {
               />
             );
           })}
-        </div>
-
-        {/* Right Image - Sticky */}
-        <div className="hidden lg:flex flex-col items-center w-full lg:w-1/5 sticky top-8 self-start">
-          <Image
-            src="/aVTtLKsU.jpg"
-            alt="Trening"
-            width={250}
-            height={250}
-            objectFit="contain"
-            className="rounded-lg shadow-md mb-8"
-          />
-          {/* You can add more images or content here */}
         </div>
       </div>
     </main>

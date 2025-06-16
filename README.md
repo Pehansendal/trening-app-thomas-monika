@@ -24,6 +24,7 @@ En enkel Next.js-applikasjon for å spore treningsprogresjon for Thomas og Monik
 *   **Supabase:** Open-source Firebase-alternativ for database og autentisering (kun database brukt her).
 *   **Tailwind CSS:** Utility-first CSS-rammeverk for rask og fleksibel styling.
 *   **`csv-parse`:** Node.js-bibliotek for å parse CSV-filer.
+*   **Google Gemini API:** Brukes for å generere AI-basert tilbakemelding fra en "trener". Spesifikk modell: `gemini-1.5-flash-preview-05-20`. Denne modellen er gratis å bruke.
 
 ## Oppsett og kjøring lokalt
 

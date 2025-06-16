@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react'; // Fjernet ubrukt useEffect
-import { createPortal } from 'react-dom'; // Import createPortal
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { TrainingDay } from '@/lib/csv';
 import { supabase } from '@/lib/supabase';
 import Confetti from 'react-confetti';
+import FeedbackModal from '@/components/FeedbackModal'; // Import FeedbackModal
 
 interface TrainingCompletionStatus {
   thomas_fullfort: boolean;
@@ -13,13 +14,17 @@ interface TrainingCompletionStatus {
   monika_rpe?: number | null;
   thomas_actual_pace?: string | null;
   monika_actual_pace?: string | null;
+  thomas_kommentar?: string | null;
+  monika_kommentar?: string | null;
+  trener_thomas_kommentar?: string | null;
+  trener_monika_kommentar?: string | null;
 }
 
 interface TrainingItemProps {
   training: TrainingDay;
-  initialCompletionStatus: TrainingCompletionStatus; // Updated prop name
+  initialCompletionStatus: TrainingCompletionStatus;
   loggedInUser: 'thomas' | 'monika';
-  onUpdate: () => Promise<void>; // Callback to refresh data in parent
+  onUpdate: () => Promise<void>;
 }
 
 export default function TrainingItem({
@@ -29,12 +34,16 @@ export default function TrainingItem({
   onUpdate, // Destructure onUpdate
 }: TrainingItemProps) {
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState('');
 
   // Local state for inputs before saving
   const [currentThomasRpe, setCurrentThomasRpe] = useState<number | undefined>(initialCompletionStatus.thomas_rpe ?? undefined);
   const [currentMonikaRpe, setCurrentMonikaRpe] = useState<number | undefined>(initialCompletionStatus.monika_rpe ?? undefined);
   const [currentThomasActualPace, setCurrentThomasActualPace] = useState<string>(initialCompletionStatus.thomas_actual_pace || '');
   const [currentMonikaActualPace, setCurrentMonikaActualPace] = useState<string>(initialCompletionStatus.monika_actual_pace || '');
+  const [currentThomasKommentar, setCurrentThomasKommentar] = useState<string>(initialCompletionStatus.thomas_kommentar || '');
+  const [currentMonikaKommentar, setCurrentMonikaKommentar] = useState<string>(initialCompletionStatus.monika_kommentar || '');
 
   // Use props directly for completed status to reflect parent's state
   const thomasCompleted = initialCompletionStatus.thomas_fullfort;
@@ -70,6 +79,8 @@ export default function TrainingItem({
       monika_rpe?: number | null;
       thomas_actual_pace?: string | null;
       monika_actual_pace?: string | null;
+      thomas_kommentar?: string | null;
+      monika_kommentar?: string | null;
     }
 
     const updateData: UpdateDataType = {};
@@ -81,9 +92,11 @@ export default function TrainingItem({
       if (checked) {
         updateData.thomas_rpe = currentThomasRpe;
         updateData.thomas_actual_pace = currentThomasActualPace;
+        updateData.thomas_kommentar = currentThomasKommentar;
       } else { // If unchecking (though prevented, good to have logic)
         updateData.thomas_rpe = null;
         updateData.thomas_actual_pace = null;
+        updateData.thomas_kommentar = null;
       }
     } else { // person === 'monika'
       updateData.monika_fullfort = checked;
@@ -91,9 +104,11 @@ export default function TrainingItem({
       if (checked) {
         updateData.monika_rpe = currentMonikaRpe;
         updateData.monika_actual_pace = currentMonikaActualPace;
+        updateData.monika_kommentar = currentMonikaKommentar;
       } else {
         updateData.monika_rpe = null;
         updateData.monika_actual_pace = null;
+        updateData.monika_kommentar = null;
       }
     }
 
@@ -111,8 +126,45 @@ export default function TrainingItem({
       setTimeout(() => {
         setShowConfetti(false); // Hide confetti after 10 seconds
       }, 10000);
+
+      // Call AI API to generate feedback
+      try {
+        const aiResponse = await fetch('/api/generate-feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user: person,
+            date: training.dato,
+            userComment: person === 'thomas' ? currentThomasKommentar : currentMonikaKommentar,
+            rpe: person === 'thomas' ? currentThomasRpe : currentMonikaRpe,
+            pace: person === 'thomas' ? currentThomasActualPace : currentMonikaActualPace,
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          console.error('Failed to generate AI feedback:', await aiResponse.text());
+          alert('Klarte ikke å generere AI-tilbakemelding.');
+        }
+      } catch (aiError) {
+        console.error('Error calling AI feedback API:', aiError);
+        alert('Feil ved kall til AI-tilbakemeldingstjenesten.');
+      }
+
       await onUpdate(); // Call parent's update function to refresh data
     }
+  };
+
+  const handleShowFeedback = (person: 'thomas' | 'monika') => {
+    let feedback = '';
+    if (person === 'thomas') {
+      feedback = initialCompletionStatus.trener_thomas_kommentar || 'Treneren har ikke gitt tilbakemelding for Thomas for denne økten ennå.';
+    } else {
+      feedback = initialCompletionStatus.trener_monika_kommentar || 'Treneren har ikke gitt tilbakemelding for Monika for denne økten ennå.';
+    }
+    setModalContent(feedback);
+    setShowModal(true);
   };
 
   return (
@@ -177,6 +229,17 @@ export default function TrainingItem({
               disabled={thomasCompleted || isPastCutoff()}
             />
           </div>
+          <div>
+            <label htmlFor={`thomas-kommentar-${training.dato}`} className="block text-sm font-medium text-gray-700">Noe du vil si til treneren?</label>
+            <textarea
+              id={`thomas-kommentar-${training.dato}`}
+              value={currentThomasKommentar}
+              onChange={(e) => setCurrentThomasKommentar(e.target.value)}
+              rows={3}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              disabled={thomasCompleted || isPastCutoff()}
+            ></textarea>
+          </div>
         </div>
       )}
       {/* Display Thomas's logged data if completed, visible to both */}
@@ -185,6 +248,7 @@ export default function TrainingItem({
           <p className="font-medium text-blue-800">Thomas' faktiske økt:</p>
           <p>Opplevd anstrengelse: {initialCompletionStatus.thomas_rpe || 'Ikke satt'}</p>
           <p>Pace: {initialCompletionStatus.thomas_actual_pace || 'Ikke satt'}</p>
+          <p>Kommentar til treneren: {initialCompletionStatus.thomas_kommentar || 'Ingen kommentar'}</p>
         </div>
       )}
 
@@ -216,6 +280,17 @@ export default function TrainingItem({
               disabled={monikaCompleted || isPastCutoff()}
             />
           </div>
+          <div>
+            <label htmlFor={`monika-kommentar-${training.dato}`} className="block text-sm font-medium text-gray-700">Noe du vil si til treneren?</label>
+            <textarea
+              id={`monika-kommentar-${training.dato}`}
+              value={currentMonikaKommentar}
+              onChange={(e) => setCurrentMonikaKommentar(e.target.value)}
+              rows={3}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+              disabled={monikaCompleted || isPastCutoff()}
+            ></textarea>
+          </div>
         </div>
       )}
       {/* Display Monika's logged data if completed, visible to both */}
@@ -224,36 +299,54 @@ export default function TrainingItem({
           <p className="font-medium text-pink-800">Monikas faktiske økt:</p>
           <p>Opplevd anstrengelse: {initialCompletionStatus.monika_rpe || 'Ikke satt'}</p>
           <p>Pace: {initialCompletionStatus.monika_actual_pace || 'Ikke satt'}</p>
+          <p>Kommentar til treneren: {initialCompletionStatus.monika_kommentar || 'Ingen kommentar'}</p>
         </div>
       )}
 
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-8 pt-4 mt-4 border-t border-gray-200">
-        <label className="flex items-center cursor-pointer group">
+        <label className={`flex items-center cursor-pointer group ${thomasCompleted ? 'text-green-600' : 'text-gray-800'}`}>
           <input
             type="checkbox"
-            className="form-checkbox h-6 w-6 text-blue-600 rounded-md transition-colors duration-200 focus:ring-2 focus:ring-blue-500"
+            className={`form-checkbox h-6 w-6 rounded-md transition-colors duration-200 focus:ring-2 ${thomasCompleted ? 'text-green-500 focus:ring-green-500' : 'text-blue-600 focus:ring-blue-500'}`}
             checked={thomasCompleted}
             onChange={(e) => handleCheckboxChange('thomas', e.target.checked)}
             disabled={loggedInUser === 'monika' || thomasCompleted || isPastCutoff()}
           />
-          <span className="ml-3 text-lg text-gray-800 font-medium group-hover:text-blue-700 transition-colors duration-200">
+          <span className="ml-3 text-lg font-medium group-hover:text-blue-700 transition-colors duration-200">
             Thomas Fullført
           </span>
         </label>
-        <label className="flex items-center cursor-pointer group">
+        <label className={`flex items-center cursor-pointer group ${monikaCompleted ? 'text-green-600' : 'text-gray-800'}`}>
           <input
             type="checkbox"
-            className="form-checkbox h-6 w-6 text-pink-600 rounded-md transition-colors duration-200 focus:ring-2 focus:ring-pink-500"
+            className={`form-checkbox h-6 w-6 rounded-md transition-colors duration-200 focus:ring-2 ${monikaCompleted ? 'text-green-500 focus:ring-green-500' : 'text-pink-600 focus:ring-pink-500'}`}
             checked={monikaCompleted}
             onChange={(e) => handleCheckboxChange('monika', e.target.checked)}
             disabled={loggedInUser === 'thomas' || monikaCompleted || isPastCutoff()}
           />
-          <span className="ml-3 text-lg text-gray-800 font-medium group-hover:text-pink-700 transition-colors duration-200">
+          <span className="ml-3 text-lg font-medium group-hover:text-pink-700 transition-colors duration-200">
             Monika Fullført
           </span>
         </label>
       </div>
+
+      {/* Trainer Feedback Buttons */}
+      <div className="mt-4 flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={() => handleShowFeedback('thomas')}
+          className={`font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out ${initialCompletionStatus.trener_thomas_kommentar ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+        >
+          Trenerens tilbakemelding for Thomas
+        </button>
+        <button
+          onClick={() => handleShowFeedback('monika')}
+          className={`font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out ${initialCompletionStatus.trener_monika_kommentar ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+        >
+          Trenerens tilbakemelding for Monika
+        </button>
+      </div>
+
       </div>
       {typeof window !== 'undefined' && document.body
         ? createPortal(
@@ -271,6 +364,10 @@ export default function TrainingItem({
             document.body
           )
         : null}
+
+      {showModal && (
+        <FeedbackModal content={modalContent} onClose={() => setShowModal(false)} />
+      )}
     </>
   );
 }
