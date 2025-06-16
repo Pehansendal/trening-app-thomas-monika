@@ -17,6 +17,23 @@ interface TrainingDay {
   Kommentar: string;
 }
 
+// Define SupabaseTrainingEntry interface based on your Supabase table structure
+interface SupabaseTrainingEntry {
+  dato: string;
+  thomas_fullfort: boolean;
+  monika_fullfort: boolean;
+  thomas_fullfort_tidspunkt?: string | null;
+  monika_fullfort_tidspunkt?: string | null;
+  thomas_rpe?: number | null;
+  monika_rpe?: number | null;
+  thomas_actual_pace?: string | null;
+  monika_actual_pace?: string | null;
+  thomas_kommentar?: string | null;
+  monika_kommentar?: string | null;
+  trener_thomas_kommentar?: string | null;
+  trener_monika_kommentar?: string | null;
+}
+
 // Access your API key as an environment variable (process.env.GEMINI_API_KEY)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -40,8 +57,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Filter data for the specific user and date
-    const currentUserData = allSupabaseData.find((item: any) => item.dato === date);
-    const userHistory = allSupabaseData.filter((item: any) => {
+    // currentUserData is not used, so it's removed to fix ESLint error
+    const userHistory: SupabaseTrainingEntry[] = allSupabaseData.filter((item: SupabaseTrainingEntry) => {
       if (user === 'thomas') return item.thomas_fullfort;
       if (user === 'monika') return item.monika_fullfort;
       return false;
@@ -64,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     // Construct user's specific history for the prompt
     let historyPrompt = '';
-    userHistory.forEach((item: any) => {
+    userHistory.forEach((item: SupabaseTrainingEntry) => {
       const rpeValue = user === 'thomas' ? item.thomas_rpe : item.monika_rpe;
       const paceValue = user === 'thomas' ? item.thomas_actual_pace : item.monika_actual_pace;
       const commentValue = user === 'thomas' ? item.thomas_kommentar : item.monika_kommentar;
