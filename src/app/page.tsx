@@ -7,6 +7,16 @@ import TrainingItem from '@/components/TrainingItem';
 import LoginPage from '@/components/LoginPage'; // Import LoginPage
 import Image from 'next/image'; // Import Image component
 
+// Define TrainingCompletionStatus at the top level or import if defined elsewhere
+interface TrainingCompletionStatus {
+  thomas_fullfort: boolean;
+  monika_fullfort: boolean;
+  thomas_rpe?: number | null;
+  monika_rpe?: number | null;
+  thomas_actual_pace?: string | null;
+  monika_actual_pace?: string | null;
+}
+
 export default function Home() {
   const [trainingProgram, setTrainingProgram] = useState<TrainingDay[]>([]);
   const [completionMap, setCompletionMap] = useState<Map<string, TrainingCompletionStatus>>(new Map());
@@ -47,11 +57,7 @@ export default function Home() {
 
 
   useEffect(() => {
-    // Check localStorage for logged in user
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser === 'thomas' || storedUser === 'monika') {
-      setLoggedInUser(storedUser);
-    }
+    // User will now always be null on initial load, forcing login
     setLoading(false);
   }, []);
 
@@ -59,7 +65,29 @@ export default function Home() {
     if (loggedInUser) {
       fetchData();
     }
-  }, [loggedInUser, fetchData]); // Add fetchData to dependency array
+  }, [loggedInUser, fetchData]); // fetchData depends on loggedInUser
+
+  // Separate useEffect for playing sound when loggedInUser is set
+  useEffect(() => {
+    if (loggedInUser) {
+      const songs = [
+        '/sanger/sang_1.mp3',
+        '/sanger/sang_2.mp3',
+        '/sanger/sang_3.mp3',
+        '/sanger/sang_4.mp3',
+        '/sanger/sang_5.mp3',
+        '/sanger/sang_6.mp3',
+        '/sanger/sang_7.mp3',
+        '/sanger/sang_8.mp3',
+      ];
+      const randomSong = songs[Math.floor(Math.random() * songs.length)];
+      const audio = new Audio(randomSong);
+      console.log(`Attempting to play song: ${randomSong} for user: ${loggedInUser}`);
+      audio.play().catch(error => {
+        console.warn(`Autoplay was prevented for ${randomSong}:`, error);
+      });
+    }
+  }, [loggedInUser]); // Play sound when loggedInUser changes (and is not null)
 
   const handleUpdateStatus = async () => {
     // This function will be called by TrainingItem after a successful Supabase update
@@ -69,22 +97,13 @@ export default function Home() {
     }
   };
 
-  interface TrainingCompletionStatus {
-    thomas_fullfort: boolean;
-    monika_fullfort: boolean;
-    thomas_rpe?: number | null;
-    monika_rpe?: number | null;
-    thomas_actual_pace?: string | null;
-    monika_actual_pace?: string | null;
-  }
-
   const handleLogin = (user: 'thomas' | 'monika') => {
-    localStorage.setItem('loggedInUser', user);
+    // localStorage.setItem('loggedInUser', user); // Fjernet lagring til localStorage
     setLoggedInUser(user);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('loggedInUser');
+    // localStorage.removeItem('loggedInUser'); // Fjernet fjerning fra localStorage
     setLoggedInUser(null);
   };
 

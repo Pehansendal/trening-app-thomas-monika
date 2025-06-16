@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom'; // Import createPortal
 import { TrainingDay } from '@/lib/csv';
 import { supabase } from '@/lib/supabase';
+import Confetti from 'react-confetti';
 
 interface TrainingCompletionStatus {
   thomas_fullfort: boolean;
@@ -26,6 +28,8 @@ export default function TrainingItem({
   loggedInUser,
   onUpdate, // Destructure onUpdate
 }: TrainingItemProps) {
+  const [showConfetti, setShowConfetti] = useState(false);
+
   // Local state for inputs before saving
   const [currentThomasRpe, setCurrentThomasRpe] = useState<number | undefined>(initialCompletionStatus.thomas_rpe ?? undefined);
   const [currentMonikaRpe, setCurrentMonikaRpe] = useState<number | undefined>(initialCompletionStatus.monika_rpe ?? undefined);
@@ -101,13 +105,20 @@ export default function TrainingItem({
       console.error('Error updating Supabase:', error);
       alert('Klarte ikke å oppdatere status. Prøv igjen.');
     } else {
+      setShowConfetti(true); // Show confetti on successful update
+      const audio = new Audio('/goodresult-82807.mp3');
+      audio.play().catch(error => console.error("Error playing sound:", error)); // Play sound and catch potential errors
+      setTimeout(() => {
+        setShowConfetti(false); // Hide confetti after 10 seconds
+      }, 10000);
       await onUpdate(); // Call parent's update function to refresh data
     }
   };
 
   return (
-    <div className="border border-gray-200 p-6 mb-6 rounded-xl shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
-      <div className="flex justify-between items-start mb-3">
+    <>
+      <div className="border border-gray-200 p-6 mb-6 rounded-xl shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
+        <div className="flex justify-between items-start mb-3">
         <h2 className="text-2xl font-extrabold text-gray-800">
           {training.dato} - {training.ukedag}
         </h2>
@@ -243,6 +254,23 @@ export default function TrainingItem({
           </span>
         </label>
       </div>
-    </div>
+      </div>
+      {typeof window !== 'undefined' && document.body
+        ? createPortal(
+            <Confetti
+              run={showConfetti} // Styr animasjonen med run-prop
+              numberOfPieces={showConfetti ? 1000 : 0} // Vis kun biter når showConfetti er true
+              recycle={false}
+              initialVelocityY={{ min: -20, max: 20 }}
+              gravity={0.05}
+              wind={0.07}
+              style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0 }} // Vær eksplisitt med position fixed
+              width={window.innerWidth}
+              height={window.innerHeight}
+            />,
+            document.body
+          )
+        : null}
+    </>
   );
 }
