@@ -1,30 +1,104 @@
-import { getTrainingProgram, TrainingDay } from '@/lib/csv';
+'use client'; // Add 'use client' directive
+
+import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import { TrainingDay } from '@/lib/csv'; // Keep TrainingDay type
 import { supabase } from '@/lib/supabase';
 import TrainingItem from '@/components/TrainingItem';
+import LoginPage from '@/components/LoginPage'; // Import LoginPage
 import Image from 'next/image'; // Import Image component
 
-export const dynamic = 'force-dynamic'; // Ensure data is always fresh
+export default function Home() {
+  const [trainingProgram, setTrainingProgram] = useState<TrainingDay[]>([]);
+  const [completionMap, setCompletionMap] = useState<Map<string, TrainingCompletionStatus>>(new Map());
+  const [loggedInUser, setLoggedInUser] = useState<'thomas' | 'monika' | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function Home() {
-  const trainingProgram = await getTrainingProgram();
+  const fetchData = async () => {
+    // Fetch training program from API route
+    const programResponse = await fetch('/api/training-program');
+    if (programResponse.ok) {
+      const programData: TrainingDay[] = await programResponse.json();
+      setTrainingProgram(programData);
+    } else {
+      console.error('Failed to fetch training program from API');
+    }
 
-  // Fetch completion status from Supabase
-  const { data: completionStatus, error } = await supabase
-    .from('treningsprogram')
-    .select('dato, thomas_fullfort, monika_fullfort');
+    const { data: completionStatusData, error } = await supabase
+      .from('treningsprogram')
+      .select('dato, thomas_fullfort, monika_fullfort, thomas_rpe, monika_rpe, thomas_actual_pace, monika_actual_pace');
 
-  if (error) {
-    console.error('Error fetching completion status:', error);
-    // Handle error gracefully, maybe show a message to the user
+    if (error) {
+      console.error('Error fetching completion status:', error);
+    }
+
+    const map = new Map<string, TrainingCompletionStatus>();
+    completionStatusData?.forEach((status) => {
+      map.set(status.dato, {
+        thomas_fullfort: status.thomas_fullfort,
+        monika_fullfort: status.monika_fullfort,
+        thomas_rpe: status.thomas_rpe,
+        monika_rpe: status.monika_rpe,
+        thomas_actual_pace: status.thomas_actual_pace,
+        monika_actual_pace: status.monika_actual_pace,
+      });
+    });
+    setCompletionMap(map);
+  };
+
+
+  useEffect(() => {
+    // Check localStorage for logged in user
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser === 'thomas' || storedUser === 'monika') {
+      setLoggedInUser(storedUser);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (loggedInUser) {
+      fetchData();
+    }
+  }, [loggedInUser]);
+
+  const handleUpdateStatus = async () => {
+    // This function will be called by TrainingItem after a successful Supabase update
+    // It will re-fetch all data to ensure the UI is in sync
+    if (loggedInUser) {
+      await fetchData();
+    }
+  };
+
+  interface TrainingCompletionStatus {
+    thomas_fullfort: boolean;
+    monika_fullfort: boolean;
+    thomas_rpe?: number | null;
+    monika_rpe?: number | null;
+    thomas_actual_pace?: string | null;
+    monika_actual_pace?: string | null;
   }
 
-  const completionMap = new Map();
-  completionStatus?.forEach((status) => {
-    completionMap.set(status.dato, {
-      thomas_fullfort: status.thomas_fullfort,
-      monika_fullfort: status.monika_fullfort,
-    });
-  });
+  const handleLogin = (user: 'thomas' | 'monika') => {
+    localStorage.setItem('loggedInUser', user);
+    setLoggedInUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    setLoggedInUser(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-xl text-gray-700">Laster...</p>
+      </div>
+    );
+  }
+
+  if (!loggedInUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center p-0 sm:p-8 bg-gray-50">
@@ -42,6 +116,13 @@ export default async function Home() {
           </h1>
         </div>
       </div>
+
+      <button
+        onClick={handleLogout}
+        className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+      >
+        Logg ut ({loggedInUser})
+      </button>
 
       <div className="flex flex-col lg:flex-row w-full max-w-7xl px-4 sm:px-0 gap-8">
         {/* Left Image - Sticky */}
@@ -63,13 +144,18 @@ export default async function Home() {
             const status = completionMap.get(training.dato) || {
               thomas_fullfort: false,
               monika_fullfort: false,
+              thomas_rpe: null,
+              monika_rpe: null,
+              thomas_actual_pace: null,
+              monika_actual_pace: null,
             };
             return (
               <TrainingItem
                 key={training.dato}
                 training={training}
-                initialThomasCompleted={status.thomas_fullfort}
-                initialMonikaCompleted={status.monika_fullfort}
+                initialCompletionStatus={status}
+                loggedInUser={loggedInUser}
+                onUpdate={handleUpdateStatus} // Pass the update handler
               />
             );
           })}
