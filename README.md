@@ -11,7 +11,20 @@ En enkel Next.js-applikasjon for å spore treningsprogresjon for Thomas og Monik
 *   **Detaljert logging per økt:**
     *   Mulighet for å logge "Opplevd anstrengelse" (RPE 1-10) via en slider.
     *   Mulighet for å logge "Pace på økt" via et tekstfelt.
-    *   Logget RPE og pace er synlig for begge brukere etter at en økt er fullført.
+    *   Mulighet for å legge inn en personlig kommentar til treneren ("Noe du vil si til treneren?").
+    *   Logget RPE, pace og kommentar er synlig for begge brukere etter at en økt er fullført.
+*   **AI-drevet Trener-tilbakemelding:**
+    *   Knapper for "Trenerens tilbakemelding for Thomas" og "Trenerens tilbakemelding for Monika" er synlige for alle brukere.
+    *   Ved klikk vises en popup med en AI-generert tilbakemelding fra en "trener".
+    *   Tilbakemeldingen er basert på brukerens loggede data (RPE, pace, kommentar) og historikk, samt informasjon om treningsprogrammet.
+    *   AI-modellen (`gemini-2.5-flash-preview-05-20`) er konfigurert til å gi nyttig, ærlig, folkelig og oppmuntrende tilbakemelding.
+    *   Tilbakemeldingen lagres i Supabase og vises med markdown-formatering.
+*   **Visuell statusindikasjon:**
+    *   Avkryssingsbokser for fullførte økter blir grønne.
+    *   Knapper for trenerens tilbakemelding blir grønne når en tilbakemelding er gitt.
+*   **Fjernet unødvendige elementer:**
+    *   Sidebilder (Monika og Trening) er fjernet for å fokusere på hovedinnholdet.
+    *   Musikkavspilling ved innlogging er deaktivert.
 *   **Regler for logging:**
     *   Det er ikke mulig å krysse av for en økt hvis det er mer enn 2 dager siden øktens dato.
     *   Når en økt er krysset av (og RPE/pace er lagt inn), kan den ikke endres eller fjernes.
@@ -53,6 +66,16 @@ Følg disse stegene for å få appen til å kjøre på din lokale maskin:
         *   `monika_rpe` (Type: `integer` (f.eks. `int2` eller `int4`), `NULLABLE`)
         *   `thomas_actual_pace` (Type: `text`, `NULLABLE`)
         *   `monika_actual_pace` (Type: `text`, `NULLABLE`)
+        *   `thomas_kommentar` (Type: `text`, `NULLABLE`)
+        *   `monika_kommentar` (Type: `text`, `NULLABLE`)
+        *   `trener_thomas_kommentar` (Type: `text`, `NULLABLE`)
+        *   `trener_monika_kommentar` (Type: `text`, `NULLABLE`)
+        *   `thomas_pushups` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
+        *   `monika_pushups` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
+        *   `thomas_pushups_knaer` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
+        *   `monika_pushups_knaer` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
+        *   `thomas_kroppsvektscurl` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
+        *   `monika_kroppsvektscurl` (Type: `integer`, `DEFAULT NULL`, `NULLABLE`)
     *   **Viktig:** For å tillate appen å skrive til databasen uten innlogging (som spesifisert i prosjektet), må du enten:
         *   **Deaktivere Row Level Security (RLS)** for `treningsprogram`-tabellen i Supabase-dashboardet.
         *   **Eller** opprette RLS-policies som tillater `SELECT`, `INSERT`, og `UPDATE` for `anon`-rollen.
@@ -64,7 +87,9 @@ Følg disse stegene for å få appen til å kjøre på din lokale maskin:
         ```
         NEXT_PUBLIC_SUPABASE_URL=DIN_SUPABASE_URL_HER
         NEXT_PUBLIC_SUPABASE_ANON_KEY=DIN_SUPABASE_ANON_KEY_HER
+        GEMINI_API_KEY=DIN_GEMINI_API_KEY_HER
         ```
+        *   **Viktig:** `GEMINI_API_KEY` er din API-nøkkel for Google Gemini API. Denne skal kun brukes på serversiden (i API-ruter) for sikkerhet.
 
 5.  **Kjør utviklingsserveren:**
     ```bash

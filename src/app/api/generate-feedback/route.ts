@@ -32,6 +32,12 @@ interface SupabaseTrainingEntry {
   monika_kommentar?: string | null;
   trener_thomas_kommentar?: string | null;
   trener_monika_kommentar?: string | null;
+  thomas_pushups?: number | null;
+  monika_pushups?: number | null;
+  thomas_pushups_knaer?: number | null;
+  monika_pushups_knaer?: number | null;
+  thomas_kroppsvektscurl?: number | null;
+  monika_kroppsvektscurl?: number | null;
 }
 
 // Access your API key as an environment variable (process.env.GEMINI_API_KEY)
@@ -48,7 +54,7 @@ export async function POST(req: NextRequest) {
     // 1. Fetch all relevant data from Supabase for the specific user
     const { data: allSupabaseData, error: supabaseError } = await supabase
       .from('treningsprogram')
-      .select('*')
+      .select('*, thomas_pushups, monika_pushups, thomas_pushups_knaer, monika_pushups_knaer, thomas_kroppsvektscurl, monika_kroppsvektscurl')
       .order('dato', { ascending: true });
 
     if (supabaseError) {
@@ -86,11 +92,17 @@ export async function POST(req: NextRequest) {
       const paceValue = user === 'thomas' ? item.thomas_actual_pace : item.monika_actual_pace;
       const commentValue = user === 'thomas' ? item.thomas_kommentar : item.monika_kommentar;
       const trainerCommentValue = user === 'thomas' ? item.trener_thomas_kommentar : item.trener_monika_kommentar;
+      const pushupsValue = user === 'thomas' ? item.thomas_pushups : item.monika_pushups;
+      const pushupsKnaerValue = user === 'thomas' ? item.thomas_pushups_knaer : item.monika_pushups_knaer;
+      const kroppsvektscurlValue = user === 'thomas' ? item.thomas_kroppsvektscurl : item.monika_kroppsvektscurl;
 
       historyPrompt += `\n--- Økt ${item.dato} ---`;
       historyPrompt += `\nDin kommentar: ${commentValue || 'Ingen'}`;
       historyPrompt += `\nRPE: ${rpeValue || 'Ikke satt'}`;
       historyPrompt += `\nPace: ${paceValue || 'Ikke satt'}`;
+      if (pushupsValue !== null && pushupsValue !== undefined) historyPrompt += `\nPushups: ${pushupsValue}`;
+      if (pushupsKnaerValue !== null && pushupsKnaerValue !== undefined) historyPrompt += `\nPushups (knær): ${pushupsKnaerValue}`;
+      if (kroppsvektscurlValue !== null && kroppsvektscurlValue !== undefined) historyPrompt += `\nKroppsvektscurl: ${kroppsvektscurlValue}`;
       historyPrompt += `\nTrenerens tidligere tilbakemelding: ${trainerCommentValue || 'Ingen'}`;
     });
 
@@ -110,6 +122,11 @@ export async function POST(req: NextRequest) {
       Din kommentar: ${userComment || 'Ingen'}
       RPE: ${rpe || 'Ikke satt'}
       Pace: ${pace || 'Ikke satt'}
+      ${ currentTrainingDay?.Økt_Beskrivelse.includes('Styrketrening') ? `
+      Pushups: ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups : allSupabaseData.find(d => d.dato === date)?.monika_pushups || 'Ikke logget'}
+      Pushups (knær): ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups_knaer : allSupabaseData.find(d => d.dato === date)?.monika_pushups_knaer || 'Ikke logget'}
+      Kroppsvektscurl: ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_kroppsvektscurl : allSupabaseData.find(d => d.dato === date)?.monika_kroppsvektscurl || 'Ikke logget'}
+      ` : ''}
 
       ${nextTrainingDay ? `Morgendagens økt (${nextTrainingDay.Dato}):
       Fokus: ${nextTrainingDay.Fokus}

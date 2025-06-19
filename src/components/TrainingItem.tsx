@@ -18,6 +18,12 @@ interface TrainingCompletionStatus {
   monika_kommentar?: string | null;
   trener_thomas_kommentar?: string | null;
   trener_monika_kommentar?: string | null;
+  thomas_pushups?: number | null;
+  monika_pushups?: number | null;
+  thomas_pushups_knaer?: number | null;
+  monika_pushups_knaer?: number | null;
+  thomas_kroppsvektscurl?: number | null;
+  monika_kroppsvektscurl?: number | null;
 }
 
 interface TrainingItemProps {
@@ -44,6 +50,14 @@ export default function TrainingItem({
   const [currentMonikaActualPace, setCurrentMonikaActualPace] = useState<string>(initialCompletionStatus.monika_actual_pace || '');
   const [currentThomasKommentar, setCurrentThomasKommentar] = useState<string>(initialCompletionStatus.thomas_kommentar || '');
   const [currentMonikaKommentar, setCurrentMonikaKommentar] = useState<string>(initialCompletionStatus.monika_kommentar || '');
+
+  // State for strength exercises
+  const [currentThomasPushups, setCurrentThomasPushups] = useState<number | undefined>(initialCompletionStatus.thomas_pushups ?? undefined);
+  const [currentMonikaPushups, setCurrentMonikaPushups] = useState<number | undefined>(initialCompletionStatus.monika_pushups ?? undefined);
+  const [currentThomasPushupsKnaer, setCurrentThomasPushupsKnaer] = useState<number | undefined>(initialCompletionStatus.thomas_pushups_knaer ?? undefined);
+  const [currentMonikaPushupsKnaer, setCurrentMonikaPushupsKnaer] = useState<number | undefined>(initialCompletionStatus.monika_pushups_knaer ?? undefined);
+  const [currentThomasKroppsvektscurl, setCurrentThomasKroppsvektscurl] = useState<number | undefined>(initialCompletionStatus.thomas_kroppsvektscurl ?? undefined);
+  const [currentMonikaKroppsvektscurl, setCurrentMonikaKroppsvektscurl] = useState<number | undefined>(initialCompletionStatus.monika_kroppsvektscurl ?? undefined);
 
   // Use props directly for completed status to reflect parent's state
   const thomasCompleted = initialCompletionStatus.thomas_fullfort;
@@ -81,6 +95,12 @@ export default function TrainingItem({
       monika_actual_pace?: string | null;
       thomas_kommentar?: string | null;
       monika_kommentar?: string | null;
+      thomas_pushups?: number | null;
+      monika_pushups?: number | null;
+      thomas_pushups_knaer?: number | null;
+      monika_pushups_knaer?: number | null;
+      thomas_kroppsvektscurl?: number | null;
+      monika_kroppsvektscurl?: number | null;
     }
 
     const updateData: UpdateDataType = {};
@@ -93,10 +113,18 @@ export default function TrainingItem({
         updateData.thomas_rpe = currentThomasRpe;
         updateData.thomas_actual_pace = currentThomasActualPace;
         updateData.thomas_kommentar = currentThomasKommentar;
+        if (training.oktBeskrivelse.includes('Styrketrening')) {
+          updateData.thomas_pushups = currentThomasPushups;
+          updateData.thomas_pushups_knaer = currentThomasPushupsKnaer;
+          updateData.thomas_kroppsvektscurl = currentThomasKroppsvektscurl;
+        }
       } else { // If unchecking (though prevented, good to have logic)
         updateData.thomas_rpe = null;
         updateData.thomas_actual_pace = null;
         updateData.thomas_kommentar = null;
+        updateData.thomas_pushups = null;
+        updateData.thomas_pushups_knaer = null;
+        updateData.thomas_kroppsvektscurl = null;
       }
     } else { // person === 'monika'
       updateData.monika_fullfort = checked;
@@ -105,10 +133,18 @@ export default function TrainingItem({
         updateData.monika_rpe = currentMonikaRpe;
         updateData.monika_actual_pace = currentMonikaActualPace;
         updateData.monika_kommentar = currentMonikaKommentar;
+        if (training.oktBeskrivelse.includes('Styrketrening')) {
+          updateData.monika_pushups = currentMonikaPushups;
+          updateData.monika_pushups_knaer = currentMonikaPushupsKnaer;
+          updateData.monika_kroppsvektscurl = currentMonikaKroppsvektscurl;
+        }
       } else {
         updateData.monika_rpe = null;
         updateData.monika_actual_pace = null;
         updateData.monika_kommentar = null;
+        updateData.monika_pushups = null;
+        updateData.monika_pushups_knaer = null;
+        updateData.monika_kroppsvektscurl = null;
       }
     }
 
@@ -240,6 +276,45 @@ export default function TrainingItem({
               disabled={thomasCompleted || isPastCutoff()}
             ></textarea>
           </div>
+
+          {/* Strength inputs for Thomas */}
+          {training.oktBeskrivelse.includes('Styrketrening') && (
+            <>
+              <div>
+                <label htmlFor={`thomas-pushups-${training.dato}`} className="block text-sm font-medium text-gray-700">Thomas - Antall Pushups:</label>
+                <input
+                  type="number"
+                  id={`thomas-pushups-${training.dato}`}
+                  value={currentThomasPushups || ''}
+                  onChange={(e) => setCurrentThomasPushups(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={thomasCompleted || isPastCutoff()}
+                />
+              </div>
+              <div>
+                <label htmlFor={`thomas-pushups-knaer-${training.dato}`} className="block text-sm font-medium text-gray-700">Thomas - Antall Pushups (knær):</label>
+                <input
+                  type="number"
+                  id={`thomas-pushups-knaer-${training.dato}`}
+                  value={currentThomasPushupsKnaer || ''}
+                  onChange={(e) => setCurrentThomasPushupsKnaer(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={thomasCompleted || isPastCutoff()}
+                />
+              </div>
+              <div>
+                <label htmlFor={`thomas-kroppsvektscurl-${training.dato}`} className="block text-sm font-medium text-gray-700">Thomas - Antall Kroppsvektscurl:</label>
+                <input
+                  type="number"
+                  id={`thomas-kroppsvektscurl-${training.dato}`}
+                  value={currentThomasKroppsvektscurl || ''}
+                  onChange={(e) => setCurrentThomasKroppsvektscurl(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={thomasCompleted || isPastCutoff()}
+                />
+              </div>
+            </>
+          )}
         </div>
       )}
       {/* Display Thomas's logged data if completed, visible to both */}
@@ -249,6 +324,9 @@ export default function TrainingItem({
           <p>Opplevd anstrengelse: {initialCompletionStatus.thomas_rpe || 'Ikke satt'}</p>
           <p>Pace: {initialCompletionStatus.thomas_actual_pace || 'Ikke satt'}</p>
           <p>Kommentar til treneren: {initialCompletionStatus.thomas_kommentar || 'Ingen kommentar'}</p>
+          {initialCompletionStatus.thomas_pushups !== null && <p>Pushups: {initialCompletionStatus.thomas_pushups}</p>}
+          {initialCompletionStatus.thomas_pushups_knaer !== null && <p>Pushups (knær): {initialCompletionStatus.thomas_pushups_knaer}</p>}
+          {initialCompletionStatus.thomas_kroppsvektscurl !== null && <p>Kroppsvektscurl: {initialCompletionStatus.thomas_kroppsvektscurl}</p>}
         </div>
       )}
 
@@ -291,6 +369,45 @@ export default function TrainingItem({
               disabled={monikaCompleted || isPastCutoff()}
             ></textarea>
           </div>
+
+          {/* Strength inputs for Monika */}
+          {training.oktBeskrivelse.includes('Styrketrening') && (
+            <>
+              <div>
+                <label htmlFor={`monika-pushups-${training.dato}`} className="block text-sm font-medium text-gray-700">Monika - Antall Pushups:</label>
+                <input
+                  type="number"
+                  id={`monika-pushups-${training.dato}`}
+                  value={currentMonikaPushups || ''}
+                  onChange={(e) => setCurrentMonikaPushups(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                  disabled={monikaCompleted || isPastCutoff()}
+                />
+              </div>
+              <div>
+                <label htmlFor={`monika-pushups-knaer-${training.dato}`} className="block text-sm font-medium text-gray-700">Monika - Antall Pushups (knær):</label>
+                <input
+                  type="number"
+                  id={`monika-pushups-knaer-${training.dato}`}
+                  value={currentMonikaPushupsKnaer || ''}
+                  onChange={(e) => setCurrentMonikaPushupsKnaer(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                  disabled={monikaCompleted || isPastCutoff()}
+                />
+              </div>
+              <div>
+                <label htmlFor={`monika-kroppsvektscurl-${training.dato}`} className="block text-sm font-medium text-gray-700">Monika - Antall Kroppsvektscurl:</label>
+                <input
+                  type="number"
+                  id={`monika-kroppsvektscurl-${training.dato}`}
+                  value={currentMonikaKroppsvektscurl || ''}
+                  onChange={(e) => setCurrentMonikaKroppsvektscurl(parseInt(e.target.value) || undefined)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                  disabled={monikaCompleted || isPastCutoff()}
+                />
+              </div>
+            </>
+          )}
         </div>
       )}
       {/* Display Monika's logged data if completed, visible to both */}
@@ -300,6 +417,9 @@ export default function TrainingItem({
           <p>Opplevd anstrengelse: {initialCompletionStatus.monika_rpe || 'Ikke satt'}</p>
           <p>Pace: {initialCompletionStatus.monika_actual_pace || 'Ikke satt'}</p>
           <p>Kommentar til treneren: {initialCompletionStatus.monika_kommentar || 'Ingen kommentar'}</p>
+          {initialCompletionStatus.monika_pushups !== null && <p>Pushups: {initialCompletionStatus.monika_pushups}</p>}
+          {initialCompletionStatus.monika_pushups_knaer !== null && <p>Pushups (knær): {initialCompletionStatus.monika_pushups_knaer}</p>}
+          {initialCompletionStatus.monika_kroppsvektscurl !== null && <p>Kroppsvektscurl: {initialCompletionStatus.monika_kroppsvektscurl}</p>}
         </div>
       )}
 

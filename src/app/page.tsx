@@ -19,6 +19,12 @@ interface TrainingCompletionStatus {
   monika_kommentar?: string | null;
   trener_thomas_kommentar?: string | null;
   trener_monika_kommentar?: string | null;
+  thomas_pushups?: number | null;
+  monika_pushups?: number | null;
+  thomas_pushups_knaer?: number | null;
+  monika_pushups_knaer?: number | null;
+  thomas_kroppsvektscurl?: number | null;
+  monika_kroppsvektscurl?: number | null;
 }
 
 export default function Home() {
@@ -39,7 +45,7 @@ export default function Home() {
 
     const { data: completionStatusData, error } = await supabase
       .from('treningsprogram')
-      .select('dato, thomas_fullfort, monika_fullfort, thomas_rpe, monika_rpe, thomas_actual_pace, monika_actual_pace, thomas_kommentar, monika_kommentar, trener_thomas_kommentar, trener_monika_kommentar');
+      .select('dato, thomas_fullfort, monika_fullfort, thomas_rpe, monika_rpe, thomas_actual_pace, monika_actual_pace, thomas_kommentar, monika_kommentar, trener_thomas_kommentar, trener_monika_kommentar, thomas_pushups, monika_pushups, thomas_pushups_knaer, monika_pushups_knaer, thomas_kroppsvektscurl, monika_kroppsvektscurl');
 
     if (error) {
       console.error('Error fetching completion status:', error);
@@ -58,6 +64,12 @@ export default function Home() {
         monika_kommentar: status.monika_kommentar,
         trener_thomas_kommentar: status.trener_thomas_kommentar,
         trener_monika_kommentar: status.trener_monika_kommentar,
+        thomas_pushups: status.thomas_pushups,
+        monika_pushups: status.monika_pushups,
+        thomas_pushups_knaer: status.thomas_pushups_knaer,
+        monika_pushups_knaer: status.monika_pushups_knaer,
+        thomas_kroppsvektscurl: status.thomas_kroppsvektscurl,
+        monika_kroppsvektscurl: status.monika_kroppsvektscurl,
       });
     });
     setCompletionMap(map);
@@ -146,6 +158,12 @@ export default function Home() {
               monika_kommentar: null,
               trener_thomas_kommentar: null,
               trener_monika_kommentar: null,
+              thomas_pushups: null,
+              monika_pushups: null,
+              thomas_pushups_knaer: null,
+              monika_pushups_knaer: null,
+              thomas_kroppsvektscurl: null,
+              monika_kroppsvektscurl: null,
             };
             return (
               <TrainingItem
