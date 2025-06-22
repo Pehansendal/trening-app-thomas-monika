@@ -17,7 +17,7 @@ En enkel Next.js-applikasjon for å spore treningsprogresjon for Thomas og Monik
     *   Knapper for "Trenerens tilbakemelding for Thomas" og "Trenerens tilbakemelding for Monika" er synlige for alle brukere.
     *   Ved klikk vises en popup med en AI-generert tilbakemelding fra en "trener".
     *   Tilbakemeldingen er basert på brukerens loggede data (RPE, pace, kommentar) og historikk, samt informasjon om treningsprogrammet.
-    *   AI-modellen (`gemini-2.5-flash-preview-05-20`) er konfigurert til å gi nyttig, ærlig, folkelig og oppmuntrende tilbakemelding.
+    *   AI-modellen (`gemini-1.5-flash-preview-05-20`) er konfigurert til å gi nyttig, ærlig, folkelig og oppmuntrende tilbakemelding.
     *   Tilbakemeldingen lagres i Supabase og vises med markdown-formatering.
 *   **Visuell statusindikasjon:**
     *   Avkryssingsbokser for fullførte økter blir grønne.
@@ -37,7 +37,7 @@ En enkel Next.js-applikasjon for å spore treningsprogresjon for Thomas og Monik
 *   **Supabase:** Open-source Firebase-alternativ for database og autentisering (kun database brukt her).
 *   **Tailwind CSS:** Utility-first CSS-rammeverk for rask og fleksibel styling.
 *   **`csv-parse`:** Node.js-bibliotek for å parse CSV-filer.
-*   **Google Gemini API:** Brukes for å generere AI-basert tilbakemelding fra en "trener". Spesifikk modell: `gemini-1.5-flash-preview-05-20`. Denne modellen er gratis å bruke.
+*   **Google Gemini API:** Brukes for å generere AI-basert tilbakemelding fra en "trener". Spesifikk modell: `gemini-2.5-flash-preview-05-20`. Denne modellen er gratis å bruke.
 
 ## Oppsett og kjøring lokalt
 
@@ -148,3 +148,11 @@ Next.js-builden feilet med `Module not found: Can't resolve 'fs'` når `src/lib/
 
 **Løsning:**
 CSV-fillesingen ble flyttet til en Next.js API Route (`src/app/api/training-program/route.ts`). Denne API-ruten leser filen på serveren og returnerer dataene som JSON. `src/app/page.tsx` henter deretter dataene fra denne API-ruten ved hjelp av `fetch`, noe som sikrer at `fs`-modulen kun brukes i servermiljøet.
+
+### 4. Valg av AI-modell
+
+**Problem:**
+Under utviklingen ble det observert at AI-modellen ga unøyaktige og lite intelligente svar, selv med svært presise instrukser. Den slet med å forstå grunnleggende kontekst, som å koble "4x8 reps" til et logget antall på "32".
+
+**Løsning:**
+Det ble identifisert at feil modellversjon ble vurdert. **Det er kritisk at `gemini-2.5-flash-preview-05-20` brukes.** Den eldre `1.5`-versjonen er utdatert og mangler den nødvendige resonneringsevnen for denne typen oppgaver. **Bruk av `gemini-1.5-flash` skal under ingen omstendigheter benyttes.**

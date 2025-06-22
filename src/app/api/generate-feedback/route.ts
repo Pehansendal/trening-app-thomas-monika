@@ -110,32 +110,42 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
 
     const prompt = `
-      Du er en profesjonell, men folkelig og brutalt ærlig løpetrener.
+      Du er en faglig sterk og motiverende trener, med ekspertise på nivå med Olympiatoppen. Din tone er folkelig, direkte og lett å forstå, men alltid konstruktiv og støttende.
+
+      **Ditt hovedmål er å bygge utøveren opp, ikke bryte ned.**
+
+      **Kontekst:**
       Dette er et 8-ukers løpeprogram. Brukeren har nettopp fullført økten for ${date}.
 
-      Her er brukerens historikk og tidligere tilbakemeldinger:
+      **Brukerens historikk (tidligere økter og tilbakemeldinger):**
       ${historyPrompt}
 
-      Dagens økt (${date}):
-      Fokus: ${currentTrainingDay?.Fokus || 'Ukjent'}
-      Beskrivelse: ${currentTrainingDay?.Økt_Beskrivelse || 'Ukjent'}
-      Din kommentar: ${userComment || 'Ingen'}
-      RPE: ${rpe || 'Ikke satt'}
-      Pace: ${pace || 'Ikke satt'}
+      **Dagens økt (${date}):**
+      - **Fokus:** ${currentTrainingDay?.Fokus || 'Ukjent'}
+      - **Planlagt økt:** ${currentTrainingDay?.Økt_Beskrivelse || 'Ukjent'}
+      - **Brukerens kommentar:** ${userComment || 'Ingen'}
+      - **Opplevd anstrengelse (RPE):** ${rpe || 'Ikke logget'}
+      - **Faktisk pace:** ${pace || 'Ikke logget'}
       ${ currentTrainingDay?.Økt_Beskrivelse.includes('Styrketrening') ? `
-      Pushups: ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups : allSupabaseData.find(d => d.dato === date)?.monika_pushups || 'Ikke logget'}
-      Pushups (knær): ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups_knaer : allSupabaseData.find(d => d.dato === date)?.monika_pushups_knaer || 'Ikke logget'}
-      Kroppsvektscurl: ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_kroppsvektscurl : allSupabaseData.find(d => d.dato === date)?.monika_kroppsvektscurl || 'Ikke logget'}
+      - **Viktig kontekst for styrketrening:** Planen var 4 sett med 8 repetisjoner (totalt 32). Brukeren har logget det totale antallet repetisjoner, noe som er helt korrekt. **Anta at de har utført øvelsen i sett som planlagt.** Deres kommentar om "juksing" og usikkerhet handler utelukkende om den tekniske utførelsen av hver repetisjon, ikke om antall sett. Gi ros for å ha fullført det planlagte volumet, og gi deretter konstruktive tips til hvordan de kan bli tryggere på selve teknikken.
+      - **Logget Pushups:** ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups : allSupabaseData.find(d => d.dato === date)?.monika_pushups || 'Ikke logget'}
+      - **Logget Pushups (knær):** ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_pushups_knaer : allSupabaseData.find(d => d.dato === date)?.monika_pushups_knaer || 'Ikke logget'}
+      - **Logget Kroppsvektscurl:** ${user === 'thomas' ? allSupabaseData.find(d => d.dato === date)?.thomas_kroppsvektscurl : allSupabaseData.find(d => d.dato === date)?.monika_kroppsvektscurl || 'Ikke logget'}
       ` : ''}
 
-      ${nextTrainingDay ? `Morgendagens økt (${nextTrainingDay.Dato}):
-      Fokus: ${nextTrainingDay.Fokus}
-      Beskrivelse: ${nextTrainingDay.Økt_Beskrivelse}` : 'Ingen planlagt økt for i morgen.'}
+      **Neste økt (${nextTrainingDay ? nextTrainingDay.Dato : 'N/A'}):**
+      - **Fokus:** ${nextTrainingDay ? nextTrainingDay.Fokus : 'Ingen planlagt økt'}
+      - **Planlagt økt:** ${nextTrainingDay ? nextTrainingDay.Økt_Beskrivelse : 'Ingen planlagt økt'}
 
-      Gi en nyttig, ærlig, folkelig og **oppmuntrende** tilbakemelding på dagens økt, og gjerne en kommentar om morgendagens økt.
-      Hold tilbakemeldingen relativt kort og konsis, maks 150 ord.
-      Vær motiverende, men også direkte og ærlig om prestasjonen.
-      Bruk gjerne litt humor og folkelige uttrykk.
+      **Din oppgave:**
+      Gi en tilbakemelding som er:
+      1.  **Faglig sterk:** Gi innsikt som en profesjonell trener ville gjort. Forklar *hvorfor* noe er bra eller kan forbedres.
+      2.  **Konstruktiv og ærlig:** Adresser brukerens kommentarer og resultater direkte, men fokuser på læring og forbedring. Unngå sarkasme og frekkhet.
+      3.  **Oppmuntrende:** Anerkjenn innsatsen og motiver for neste økt. Finn noe positivt, selv i en dårlig økt.
+      4.  **Nyttig:** Gi konkrete tips eller noe brukeren kanskje ikke har tenkt på.
+      5.  **Folkelig:** Bruk et enkelt og direkte språk, men unngå overdreven banning eller aggressivitet.
+
+      Strukturer svaret ditt med en kort analyse av dagens økt, og se deretter fremover mot neste. Hold det konsist (maks 150 ord).
     `;
 
     const result = await model.generateContent(prompt);
